@@ -1,0 +1,26 @@
+<div class="form-floating w-100 m-auto form-register">
+  <form [formGroup]="userForm" (ngSubmit)="submitForm(userForm)">
+    <div class="alert alert-info d-block align-items-center">
+      User enregistré dans le Storage : {{ registredUser?.pseudo }}
+    </div>
+    <h1 class="h3 mb-3 fw-normal">Entrez un pseudo</h1>
+    <div class="form-floating">
+      <input formControlName="pseudo" type="text" class="form-control" id="floatingInput" placeholder="pseudo" required />
+      <label>Pseudo</label>
+      <div *ngIf="userForm.get('pseudo')!.invalid && (userForm.get('pseudo')!.dirty || userForm.get('pseudo')!.touched)" class="alert alert-warning" role="alert">
+        Entrez un pseudo
+      </div>
+    </div>
+    <h3>Role</h3>
+    <p>Gérant-e de Coffee Shop</p>
+    <div class="checkbox mb-3">
+      <label>
+        <input type="checkbox" value="remember-me" class="form-check-input" formControlName="rememberme"> Remember me
+      </label>
+    </div>
+    <button class="w-100 btn btn-lg btn-primary" type="submit" [disabled]="userForm.invalid">Next</button>
+    <div class="alert alert-danger d-block align-items-center" *ngIf="error">
+      Erreur dans le formulaire: {{ msgError }}
+    </div>
+  </form>
+</div>
