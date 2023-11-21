@@ -57,18 +57,26 @@ export class RegisterComponent implements OnInit {
           this.playerService.createPlayer(formattedPseudoValue).subscribe((data) => {
             console.log('Player {} est bien enregistré !', data);
             this.savePlayerLocally(data);
-            this.saveRegistredChicken(data.chickens);
+
+              //TODO move checks for user's chickens in form component
+              if(data.chickens && data.chickens.some(chicken => chicken.masterId = this.registredUser!.id)){
+                this.saveRegistredChicken(data.chickens);
+            }
             console.log("Chickens from data: "+data.chickens);
             this.router.navigate(['/players']);
           }, error => {
             this.handleMsgError(error)
-          });
+          },
+            );
           //1-User enregistré dans Storage, récupérer le player dans le back
         } else {
           this.playerService.getRegistredPlayer(formattedPseudoValue).subscribe((data) => {
             console.log('Player {} actuellement enregistré', data);
             this.savePlayerLocally(data);
-            this.saveRegistredChicken(data.chickens);
+            //TODO move checks for user's chickens in form component
+            if(data.chickens){
+              this.saveRegistredChicken(data.chickens);
+            }
             console.log("Chickens from data: "+data.chickens);
             this.router.navigateByUrl('/players');
           }, error => {

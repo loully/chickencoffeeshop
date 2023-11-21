@@ -43,9 +43,13 @@
           </div>
           <div class="col-sm-4 mb-2 form-floating">
             <select class="form-select" id="fur" required formControlName="fur">
+              <option value="" selected disabled>Choisissez une option</option>
               <option *ngFor="let options of furOptions"
-              [selected]="this.registredChicken![i].fur"
+                      [value]="options.value"
+              [selected]="this.registredChicken[i]?.fur == options.value"
               >{{ options.value}}</option>
+              <!-- Need to fix correct fur select when registredChicken exist and is fullfilled -->
+
             </select>
             <label
               for="fur"
@@ -59,10 +63,13 @@
               *ngIf="!chickenUnitForm.get('fur')?.value">
               Choisissez un pelage
             </div>
-            <div>
+            <div *ngIf="chickenUnitForm.get('fur')?.value; else noFur">
              Fur selected :{{chickenUnitForm.get('fur')?.value}}
-              Fur Value from add chicken unit : {{ filteredFurValue!.value }}
+              Fur Value from add chicken unit : {{ filteredFurValue?.value }}
             </div>
+            <ng-template #noFur>
+              No fur selected
+            </ng-template>
           </div>
           <div class="col-sm-1 mb-2">
             <button class="btn btn-outline-danger" (click)="removeChicken(i)">

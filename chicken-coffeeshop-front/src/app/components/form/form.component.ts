@@ -36,14 +36,13 @@ export class FormComponent implements OnInit {
   isThereDuplication = false;
   player!: Player | null;
   furOptions = [
-    {name: 'choose', value: 'Choisir'},
     {name: 'WHITEFUR', value: 'Blanche'},
     {name: 'REDFUR', value: 'Rousse'}
   ];
   finalChickens: Chicken[] = [];
   msgError!: string;
   isRegistred!: boolean;
-  registredChicken!: Chicken[] | null;
+  registredChicken!: Chicken[] | [];
   filteredFurValue!: { name:string, value:string } | null;
   //furInclude = this.furOptions.map(e=> e.value).includes(this.furValue?.value);
 
@@ -64,24 +63,26 @@ export class FormComponent implements OnInit {
       this.isRegistred = player?.id !== 0;
       console.log("Player name registred: ", player?.pseudo);
     });
-    // If player is registred, get registred chicken
-    if(this.storage.storageGetItem(Constants.KEY_CHICKENS)!= null) {
-      if(this.storage.storageGetItem(Constants.KEY_CHICKENS)!.length>0) {
-        //TODO: Condition si storage getitem est NON VIDE !!
-        console.log("Chicken registred: " + this.storage.storageGetItem(Constants.KEY_CHICKENS));
-        console.log("Type of: " + typeof this.storage.storageGetItem(Constants.KEY_CHICKENS));
-        this.registredChicken = JSON.parse(<string>this.storage.storageGetItem(Constants.KEY_CHICKENS));
-        console.log(this.registredChicken);
-        console.log("First chicken " + JSON.stringify(this.registredChicken![0]));
-        JSON.stringify(this.registredChicken![1])?console.log("Second chicken " + JSON.stringify(this.registredChicken![1])):console.log("");
+    // If player is registred, check masterId and get registred chicken in localStorage
+    this.registredChicken = JSON.parse(<string>this.storage.storageGetItem(Constants.KEY_CHICKENS));
+    console.log("Chicken actually registred: ",this.registredChicken);
+    if(this.registredChicken!= null && this.registredChicken.length>0) {
+      if(this.registredChicken.some(chicken => chicken.masterId !== this.player!.id)) {
+        console.log("Chicken registred are NOT owned by the user");
+        this.registredChicken = [];
+        console.log("Chicken registred after usr check: ",this.registredChicken);
+        //console.log("First chicken " + JSON.stringify(this.registredChicken![0]));
+        //JSON.stringify(this.registredChicken![1])?console.log("Second chicken " + JSON.stringify(this.registredChicken![1])):console.log("");
       }
+      //TODO
+      //If chicken are not registred in localStorage, then call API to retrieve chickens
     }
 
     // Build form
     this.form = this.formBuilder;
     if(this.registredChicken && this.registredChicken?.length>0) {
       console.log("Chicken Units Array length : "+this.chickenUnitsArray?.length);
-      this.registredChicken!.map(chicken => {
+      this.registredChicken!.map((chicken: Chicken) => {
         if(this.chickenUnitsArray?.length>0) {
           this.chickenUnitsArray.push(this.addChickenUnitFormGroup(true,chicken));
         console.log("Ajout dans form array");
