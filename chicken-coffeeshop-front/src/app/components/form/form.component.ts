@@ -16,6 +16,8 @@ import {Location} from "@angular/common";
 import {Chicken} from "../../models/chicken";
 import {ChickenService} from "../../services/chicken.service";
 import {Router} from "@angular/router";
+import {catchError} from "rxjs/operators";
+import {EMPTY} from "rxjs";
 
 @Component({
   selector: 'app-form',
@@ -63,36 +65,61 @@ export class FormComponent implements OnInit {
       this.isRegistred = player?.id !== 0;
       console.log("Player name registred: ", player?.pseudo);
     });
-    // If player is registred, check masterId and get registred chicken in localStorage
+    // If chickens are registred, check masterId and get registred chicken in localStorage
     this.registredChicken = JSON.parse(<string>this.storage.storageGetItem(Constants.KEY_CHICKENS));
     console.log("Chicken actually registred: ",this.registredChicken);
     if(this.registredChicken!= null && this.registredChicken.length>0) {
       if(this.registredChicken.some(chicken => chicken.masterId !== this.player!.id)) {
         console.log("Chicken registred are NOT owned by the user");
-        this.registredChicken = [];
+        this.chickenService.getRegistredChickenPlayer(this.player!.id)
+          .pipe(
+            catchError (() => {
+              console.log("Erreur lors du chargement des poules");
+              this.registredChicken = [];
+              return EMPTY;
+            }))
+          .subscribe(chickens => {
+              console.log("Chickens registred from back -subscribe-",chickens);
+              this.registredChicken = chickens;
+              this.buildForm();
+            }
+          );
         console.log("Chicken registred after usr check: ",this.registredChicken);
         //console.log("First chicken " + JSON.stringify(this.registredChicken![0]));
         //JSON.stringify(this.registredChicken![1])?console.log("Second chicken " + JSON.stringify(this.registredChicken![1])):console.log("");
       }
-      //TODO
       //If chicken are not registred in localStorage, then call API to retrieve chickens
+    } else {
+      this.chickenService.getRegistredChickenPlayer(this.player!.id)
+        .pipe(
+          catchError (() => {
+            console.log("Erreur lors du chargement des poules");
+            this.registredChicken = [];
+            return EMPTY;
+          }))
+        .subscribe(chickens =>{
+            this.registredChicken = chickens;
+            this.buildForm();
+          }
+        );
     }
+  }
 
-    // Build form
+  buildForm(){
     this.form = this.formBuilder;
     if(this.registredChicken && this.registredChicken?.length>0) {
       console.log("Chicken Units Array length : "+this.chickenUnitsArray?.length);
       this.registredChicken!.map((chicken: Chicken) => {
         if(this.chickenUnitsArray?.length>0) {
           this.chickenUnitsArray.push(this.addChickenUnitFormGroup(true,chicken));
-        console.log("Ajout dans form array");
+          console.log("Ajout dans form array");
         } else {
-        this.chickenUnitsArray = this.formBuilder.array([
-          this.addChickenUnitFormGroup(true, chicken)
-        ]);
-        console.log("1re création du form array");
+          this.chickenUnitsArray = this.formBuilder.array([
+            this.addChickenUnitFormGroup(true, chicken)
+          ]);
+          console.log("1re création du form array");
         }
-      console.log("a new registred chicken is added");
+        console.log("a new registred chicken is added");
       });
     } else {
       this.chickenUnitsArray = this.formBuilder.array([

@@ -55,18 +55,12 @@ export class RegisterComponent implements OnInit {
         if (formattedPseudoValue !== this.registredUser?.pseudo) {
           console.log('Storage : {}', this.pseudoValue.toString());
           this.playerService.createPlayer(formattedPseudoValue).subscribe((data) => {
-            console.log('Player {} est bien enregistré !', data);
-            this.savePlayerLocally(data);
-
-              //TODO move checks for user's chickens in form component
-              if(data.chickens && data.chickens.some(chicken => chicken.masterId = this.registredUser!.id)){
-                this.saveRegistredChicken(data.chickens);
-            }
-            console.log("Chickens from data: "+data.chickens);
-            this.router.navigate(['/players']);
-          }, error => {
-            this.handleMsgError(error)
-          },
+              console.log('Player {} est bien enregistré !', data);
+              this.savePlayerLocally(data);
+              this.router.navigate(['/players']);
+            }, error => {
+              this.handleMsgError(error)
+            },
             );
           //1-User enregistré dans Storage, récupérer le player dans le back
         } else {

@@ -51,4 +51,13 @@ public class ChickenService {
             return new ChickenView(chicken.getId(), chicken.getName(), chicken.getFur(), payload.getMasterId(), chicken.getOrderPassage());
         }
     }
+
+    //Get chickens of a player by playerId
+    public List<ChickenView> getChickensByPlayerId(int playerId){
+        log.info("Get chickens from player id {}",playerId);
+        List<ChickenView> result;
+        List<Chicken> chickens = chickenRepository.findAllByMasterId(playerId).get();
+        result = chickens.stream().map(ChickenView::new).collect(Collectors.toList());
+        return result;
+    }
 }

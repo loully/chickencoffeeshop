@@ -3,6 +3,7 @@ import {Chicken} from "../models/chicken";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Constants} from "../shared/constants";
 import {BehaviorSubject, Observable} from "rxjs";
+import {Player} from "../models/player";
 
 @Injectable({
   providedIn: 'root'
@@ -30,6 +31,12 @@ export class ChickenService {
 
   public getLocalActualChicken(chicken:Chicken){
     return this.actualChicken;
+  }
+
+  //to server
+  public getRegistredChickenPlayer(playerId: number):Observable<Chicken[]> {
+    const url = `${Constants.URL_CHICKEN}/${playerId}`;
+    return this.http.get<Chicken[]>(url);
   }
 
 }

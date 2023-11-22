@@ -1,5 +1,6 @@
 package fr.holytouch.chickencoffeeshopback.dto.view;
 
+import fr.holytouch.chickencoffeeshopback.entity.Chicken;
 import fr.holytouch.chickencoffeeshopback.entity.Player;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,4 +17,12 @@ public class ChickenView {
     private String fur;
     private Integer masterId;
     private int orderPassage;
+
+    public ChickenView(Chicken chicken) {
+        this.id = chicken.getId();
+        this.name = chicken.getName();
+        this.fur = chicken.getFur();
+        this.masterId = chicken.getMaster().getId();
+        this.orderPassage = chicken.getOrderPassage();
+    }
 }
