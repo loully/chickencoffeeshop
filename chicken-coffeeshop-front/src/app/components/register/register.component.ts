@@ -35,12 +35,12 @@ export class RegisterComponent implements OnInit {
       this.storage.storageSetItem(Constants.KEY_USER,JSON.stringify(player));
       console.log("User enregistré depuis le storage : {}", this.registredUser);
     });
-    this.registredUser = JSON.parse(<string>this.storage.storageGetItem(Constants.KEY_USER));
+    this.registredUser = JSON.parse(this.storage.storageGetItem(Constants.KEY_USER) as string);
     console.log("store chicken: "+this.storage.storageGetItem(Constants.KEY_CHICKENS));
 
     this.userForm = this.fb.group({
       pseudo: [this.registredUser?.pseudo, Validators.required],
-      rememberme: [this.registredUser?.id !==0]
+      rememberMe: [this.registredUser?.id !==0]
     });
   }
 
@@ -50,7 +50,7 @@ export class RegisterComponent implements OnInit {
     let formattedPseudoValue = this.pseudoValue.toString();
 
     if(form.valid){
-      if(this.userForm.get("rememberme")?.value) {
+      if(this.userForm.get("rememberMe")?.value) {
         //2-Player n'est pas dans LocalStorage, demander au back de le créer ou de renvoyer l'existant
         if (formattedPseudoValue !== this.registredUser?.pseudo) {
           console.log('Storage : {}', this.pseudoValue.toString());
@@ -100,7 +100,7 @@ export class RegisterComponent implements OnInit {
   handleMsgError(error:any){
     this.error=true;
     this.msgError = error;
-    console.log("Erreur: {}",error);
+    console.error("Erreur: ",error);
   }
 
 

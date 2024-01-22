@@ -15,79 +15,82 @@
   <h4>Nommez vos poules</h4>
   <form [formGroup]="chickenForm" >
     <ng-container formArrayName="chickenUnits">
-      <ng-container *ngFor="let chickenUnitForm of chickenUnits['controls']; let i = index">
-        <div class="row mb-2 mt-2" [formGroupName]="i">
-          <div class="col-sm-6 mb-2 form-floating">
-            <input
-              type="text"
-              id="nameChicken"
-              class="form-control"
-              placeholder="Name a chicken"
-              formControlName="nameChicken"
-              required
-            >
-            <label
-              for="nameChicken"
-              class="form-label ps-4">
-              Nom de la poule
-            </label>
-            <div class="alert alert-danger d-block"
-                 *ngIf="chickenUnitForm?.get('nameChicken')?.pristine && chickenUnitForm?.get('nameChicken')?.touched
-                 || chickenUnitForm?.get('nameChicken')?.value === '' && chickenUnitForm?.get('nameChicken')?.dirty
-                  || chickenUnitForm.get('fur')?.value && chickenUnitForm?.get('nameChicken')?.value === ''">
-              La poule doit avoir un nom.
+      <ng-container *ngIf="chickenForm.get('chickenUnits') as chickenUnitsArray">
+        <ng-container *ngFor="let chickenUnitForm of getChickenUnitsControls(); let i = index">
+          <div class="row mb-2 mt-2" [formGroupName]="i">
+            <div class="col-sm-6 mb-2 form-floating">
+              <input
+                type="text"
+                id="nameChicken"
+                class="form-control"
+                placeholder="Name a chicken"
+                formControlName="nameChicken"
+                required
+              >
+              <label
+                for="nameChicken"
+                class="form-label ps-4">
+                Nom de la poule
+              </label>
+              <div class="alert alert-danger d-block"
+                   *ngIf="chickenUnitForm?.get('nameChicken')?.pristine && chickenUnitForm?.get('nameChicken')?.touched
+                   || chickenUnitForm?.get('nameChicken')?.value === '' && chickenUnitForm?.get('nameChicken')?.dirty
+                    || chickenUnitForm.get('fur')?.value && chickenUnitForm?.get('nameChicken')?.value === ''">
+                La poule doit avoir un nom.
+              </div>
+              <div class="alert alert-info">
+                Errors : {{ chickenUnitForm?.get('nameChicken')?.errors | json }}
+              </div>
             </div>
-            <div class="alert alert-info">
-              Errors : {{ chickenUnitForm?.get('nameChicken')?.errors | json }}
-            </div>
-          </div>
-          <div class="col-sm-4 mb-2 form-floating">
-            <select class="form-select" id="fur" required formControlName="fur">
-              <option value="" selected disabled>Choisissez une option</option>
-              <option *ngFor="let options of furOptions"
-                      [value]="options.value"
-              [selected]="this.registredChicken[i]?.fur == options.value"
-              >{{ options.value}}</option>
-              <!-- Need to fix correct fur select when registredChicken exist and is fullfilled -->
+            <div class="col-sm-4 mb-2 form-floating">
+              <select class="form-select" id="fur" required formControlName="fur">
+                <option value="" selected disabled>Choisissez une option</option>
+                <option *ngFor="let options of furOptions"
+                        [value]="options.value"
+                [selected]="chickenUnitForm.get('fur')?.value == options.value"
+                >{{ options.value}}</option>
+                <!-- Need to fix correct fur select when registredChicken exist and is fullfilled -->
 
-            </select>
-            <label
-              for="fur"
-              class="form-label ps-4">
-              Pelage
-            </label>
-            <div class="alert alert-info">
-              Errors : {{ this.chickenUnitForm.get('fur')?.errors | json}}
+              </select>
+              <label
+                for="fur"
+                class="form-label ps-4">
+                Pelage
+              </label>
+              <div class="alert alert-info">
+                Errors : {{ chickenUnitForm.get('fur')?.errors | json}}
+              </div>
+              <ng-container *ngIf="!chickenUnitForm.get('fur')?.value">
+                <div class="alert alert-warning">
+                  Choisissez un pelage
+                </div>
+              </ng-container>
+              <div *ngIf="chickenUnitForm.get('fur')?.value; else noFur">
+               Fur selected :{{chickenUnitForm.get('fur')?.value}}
+                Fur Value from add chicken unit : {{ filteredFurValue?.value }}
+              </div>
+              <ng-template #noFur>
+                No fur selected
+              </ng-template>
             </div>
-            <div class="alert alert-warning"
-              *ngIf="!chickenUnitForm.get('fur')?.value">
-              Choisissez un pelage
+            <div class="col-sm-1 mb-2">
+              <button class="btn btn-outline-danger" (click)="removeChicken(i)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Supprimer
+              </button>
             </div>
-            <div *ngIf="chickenUnitForm.get('fur')?.value; else noFur">
-             Fur selected :{{chickenUnitForm.get('fur')?.value}}
-              Fur Value from add chicken unit : {{ filteredFurValue?.value }}
-            </div>
-            <ng-template #noFur>
-              No fur selected
-            </ng-template>
           </div>
-          <div class="col-sm-1 mb-2">
-            <button class="btn btn-outline-danger" (click)="removeChicken(i)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-              </svg>
-              Supprimer
-            </button>
+          <div class="alert-danger alert" *ngIf="chickenUnitForm?.get('nameChicken')?.getError('duplicated')">
+            Cette poule existe déjà
           </div>
-        </div>
-        <div class="alert-danger alert" *ngIf="chickenUnitForm?.get('nameChicken')?.getError('duplicated')">
-          Cette poule existe déjà
-        </div>
-        <div>
-          Errors FormArray : {{ chickenUnits.errors | json }}
-        </div>
+          <div>
+            Errors FormArray : {{ chickenUnits.errors | json }}
+          </div>
 
+        </ng-container>
       </ng-container>
     </ng-container>
     <button class="btn btn-outline-primary me-3"
@@ -105,11 +108,11 @@
         Jouer
       </button>
     </div>
-    <div *ngIf="!this.chickenForm.valid && submit" class="alert alert-danger mt-3" role="alert">
+    <div *ngIf="!chickenForm.valid && submit" class="alert alert-danger mt-3" role="alert">
       Tous les champs ne sont pas remplis.
     </div>
-    <div class="alert alert-danger d-block" *ngIf="msgError">
-      {{ msgError}}
+    <div class="alert alert-danger d-block" *ngIf="msgError as error">
+      {{ error}}
     </div>
   </form>
 </div>

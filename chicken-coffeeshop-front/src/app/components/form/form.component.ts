@@ -16,8 +16,8 @@ import {Location} from "@angular/common";
 import {Chicken} from "../../models/chicken";
 import {ChickenService} from "../../services/chicken.service";
 import {Router} from "@angular/router";
-import {catchError} from "rxjs/operators";
-import {EMPTY} from "rxjs";
+import {catchError, takeUntil} from "rxjs/operators";
+import {EMPTY, Subject} from "rxjs";
 
 @Component({
   selector: 'app-form',
@@ -27,7 +27,6 @@ import {EMPTY} from "rxjs";
 export class FormComponent implements OnInit {
 
   pseudo!: string;
-  form!:FormBuilder;
   chickenForm!: FormGroup;
   chickenUnitsArray!:FormArray;
   chickenUnitForm!: FormGroup;
@@ -35,7 +34,7 @@ export class FormComponent implements OnInit {
   submit = false;
   duplicates = [];
   duplicatedIndex!: number[][];
-  isThereDuplication = false;
+  isThereDuplicates = false;
   player!: Player | null;
   furOptions = [
     {name: 'WHITEFUR', value: 'Blanche'},
@@ -47,6 +46,7 @@ export class FormComponent implements OnInit {
   registredChicken!: Chicken[] | [];
   filteredFurValue!: { name:string, value:string } | null;
   //furInclude = this.furOptions.map(e=> e.value).includes(this.furValue?.value);
+  private ngUnsubscribe = new Subject();
 
   constructor(
     private playerService: PlayerService,
@@ -59,15 +59,20 @@ export class FormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.playerService.getLocalRegistredPlayer().subscribe((player) => {
+    this.playerService.getLocalRegistredPlayer()
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((player) => {
       this.pseudo = player?.pseudo!;
       this.player = player;
       this.isRegistred = player?.id !== 0;
       console.log("Player name registred: ", player?.pseudo);
     });
     // If chickens are registred, check masterId and get registred chicken in localStorage
-    this.registredChicken = JSON.parse(<string>this.storage.storageGetItem(Constants.KEY_CHICKENS));
+    this.registredChicken = JSON.parse(this.storage.storageGetItem(Constants.KEY_CHICKENS) as string);
     console.log("Chicken actually registred: ",this.registredChicken);
+    if (this.chickenUnitsArray != null) {
+      this.chickenUnitsArray = this.formBuilder.array([]);
+    }
     if(this.registredChicken!= null && this.registredChicken.length>0) {
       if(this.registredChicken.some(chicken => chicken.masterId !== this.player!.id)) {
         console.log("Chicken registred are NOT owned by the user");
@@ -99,18 +104,16 @@ export class FormComponent implements OnInit {
           }))
         .subscribe(chickens =>{
             this.registredChicken = chickens;
-            this.buildForm();
           }
         );
     }
+    this.buildForm();
   }
 
   buildForm(){
-    this.form = this.formBuilder;
     if(this.registredChicken && this.registredChicken?.length>0) {
-      console.log("Chicken Units Array length : "+this.chickenUnitsArray?.length);
       this.registredChicken!.map((chicken: Chicken) => {
-        if(this.chickenUnitsArray?.length>0) {
+        if(this.chickenUnitsArray?.length>0 && this.chickenUnitsArray != null) {
           this.chickenUnitsArray.push(this.addChickenUnitFormGroup(true,chicken));
           console.log("Ajout dans form array");
         } else {
@@ -122,18 +125,26 @@ export class FormComponent implements OnInit {
         console.log("a new registred chicken is added");
       });
     } else {
-      this.chickenUnitsArray = this.formBuilder.array([
-        this.addChickenUnitFormGroup(false)
-      ]);
+      if(this.chickenUnitsArray != null){
+        this.chickenUnitsArray = this.formBuilder.array([
+          this.addChickenUnitFormGroup(false)
+        ]);
+      } else{
+        this.chickenUnitsArray = this.formBuilder.array([]);
+      }
     }
-    this.chickenForm = this.form.group({
-      'chickenUnits':this.chickenUnitsArray
-    });
-    this.chickenUnitsArray.value.forEach((e: string)=> console.log("Chicken Units Array : "+JSON.stringify(e)));
-    console.log("New length of fomr array "+this.chickenUnitsArray?.length);
-    this.chickenUnits.valueChanges.subscribe(x => {
-      this.checkDuplicatesInput('nameChicken');
-    });
+    if(this.chickenUnitsArray != null) {
+      this.chickenForm = new FormGroup({
+        'chickenUnits':this.chickenUnitsArray
+      });
+      this.chickenUnitsArray.value.forEach((e: string)=> console.log("Chicken Units Array : "+JSON.stringify(e)));
+      console.log("New length of fomr array "+this.chickenUnitsArray?.length);
+      this.chickenUnits.valueChanges
+        .pipe(takeUntil(this.ngUnsubscribe))
+        .subscribe(x => {
+        this.checkDuplicatesInput('nameChicken');
+      });
+    }
   }
 
   submitForm() {
@@ -156,7 +167,9 @@ export class FormComponent implements OnInit {
     if (this.player?.id != 0) {
       console.log("Final Chickens before sending to back " + this.finalChickens);
       this.finalChickens.map((chicken, index) => {
-        this.chickenService.createChicken(chicken).subscribe((result) => {
+        this.chickenService.createChicken(chicken)
+          .pipe(takeUntil(this.ngUnsubscribe))
+          .subscribe((result) => {
           console.log("Chicken enregistré dans le back: " + JSON.stringify(result));
         }, error => {
           this.msgError = error;
@@ -186,7 +199,7 @@ export class FormComponent implements OnInit {
       console.log("-addChickenUnitFormGroup- Fur Value "+this.filteredFurValue?.value);
       return this.formBuilder.group({
         'nameChicken': [chickenRegistred.name],
-        'fur': [this.filteredFurValue?.value]
+        'fur': [chickenRegistred.fur]
       }, {
         validators: Validators.required,
         updateOn: 'change'
@@ -231,7 +244,7 @@ export class FormComponent implements OnInit {
       }
     });
 
-    this.isThereDuplication = this.duplicatedIndex?.length > 1;
+    this.isThereDuplicates = this.duplicatedIndex?.length > 1;
     this.duplicatedIndex = [...new Set(this.duplicatedIndex)]; //remove duplicated elements
 
     this.duplicatedIndex.forEach((item) => {
@@ -280,5 +293,15 @@ export class FormComponent implements OnInit {
     //Fait casser le storage des chickens
     //this.storage.storageSetItem(Constants.KEY_CHICKENS, this.chickenForm.value);
     this.location.back();
+  }
+
+  ngOnDestroy():void{
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+  }
+
+  getChickenUnitsControls() {
+    const chickenUnitsArray = this.chickenForm.get('chickenUnits') as FormArray;
+    return chickenUnitsArray.controls;
   }
 }
